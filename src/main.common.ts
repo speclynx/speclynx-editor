@@ -1,15 +1,12 @@
 import './style.css'
 import { ExtensionHostKind, registerExtension } from '@codingame/monaco-vscode-api/extensions'
-import { useHtmlFileSystemProvider } from './setup.common'
-import './features/notifications'
-import './theme'
 
 // Language extensions needed for API specs
 import '@codingame/monaco-vscode-json-default-extension'
 import '@codingame/monaco-vscode-yaml-default-extension'
 import '@codingame/monaco-vscode-markdown-basics-default-extension'
 
-// Theme extensions (only seti icon theme — color themes provided by SpecLynx)
+// Theme extensions
 import '@codingame/monaco-vscode-theme-seti-default-extension'
 
 // Utility extensions
@@ -30,9 +27,6 @@ const { getApi } = registerExtension(
 )
 
 void getApi().then(async (vscode) => {
-  if (!useHtmlFileSystemProvider) {
-    // Open the petstore sample by default
-    const petstoreUri = vscode.Uri.file('/workspace/petstore.yaml')
-    await vscode.workspace.openTextDocument(petstoreUri)
-  }
+  const petstoreUri = vscode.Uri.file('/workspace/petstore.yaml')
+  await vscode.workspace.openTextDocument(petstoreUri)
 })

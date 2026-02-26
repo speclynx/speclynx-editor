@@ -1,3 +1,8 @@
+// Theme must be imported FIRST — before any service overrides or localExtensionHost.
+// This ensures registerExtension() is called while servicesInitialized is still false,
+// placing the theme in builtinExtensions for synchronous processing during init.
+import './theme'
+
 import './features/galleryFilter'
 import getConfigurationServiceOverride, {
   IStoredWorkspace,
@@ -10,9 +15,7 @@ import {
   RegisteredFileSystemProvider,
   RegisteredMemoryFile,
   createIndexedDBProviders,
-  registerHTMLFileSystemProvider,
-  registerFileSystemOverlay,
-  initFile
+  registerFileSystemOverlay
 } from '@codingame/monaco-vscode-files-service-override'
 import * as monaco from 'monaco-editor'
 import {
@@ -58,19 +61,14 @@ import defaultKeybindings from './user/keybindings.json?raw'
 import defaultConfiguration from './user/configuration.json?raw'
 import 'vscode/localExtensionHost'
 
-// Import SpecLynx extension via VSIX plugin  
+// Import SpecLynx extension via VSIX plugin
 import '../extensions/speclynx-openapi-toolkit.vsix'
 
 import petstoreSample from './samples/petstore.yaml?raw'
 
 const url = new URL(document.location.href)
 const params = url.searchParams
-export const remoteAuthority = params.get('remoteAuthority') ?? undefined
-export const connectionToken = params.get('connectionToken') ?? undefined
-export const remotePath =
-  remoteAuthority != null ? (params.get('remotePath') ?? undefined) : undefined
 export const resetLayout = params.has('resetLayout')
-export const useHtmlFileSystemProvider = params.has('htmlFileSystemProvider')
 export const disableShadowDom = params.has('disableShadowDom')
 params.delete('resetLayout')
 
@@ -78,53 +76,58 @@ window.history.replaceState({}, document.title, url.href)
 
 export let workspaceFile = monaco.Uri.file('/workspace.code-workspace')
 
-export const userDataProvider = await createIndexedDBProviders()
+// Version-based cache clear: bump this when branding/config changes
+// to ensure returning visitors get fresh settings from IndexedDB.
+// Must run BEFORE createIndexedDBProviders so providers open fresh databases.
+const EDITOR_VERSION = '4'
+const STORAGE_VERSION_KEY = 'speclynx-editor-version'
+const storedVersion = localStorage.getItem(STORAGE_VERSION_KEY)
+if (storedVersion !== EDITOR_VERSION) {
+  const databases = await indexedDB.databases()
+  await Promise.all(
+    databases
+      .filter(db => db.name && (db.name.startsWith('vscode-') || db.name.startsWith('workbench-')))
+      .map(db => new Promise<void>((resolve) => {
+        const req = indexedDB.deleteDatabase(db.name!)
+        req.onsuccess = () => resolve()
+        req.onerror = () => resolve()
+        req.onblocked = () => resolve()
+      }))
+  )
+  localStorage.setItem(STORAGE_VERSION_KEY, EDITOR_VERSION)
+}
 
-if (useHtmlFileSystemProvider) {
-  workspaceFile = monaco.Uri.from({ scheme: 'tmp', path: '/test.code-workspace' })
-  await initFile(
+await createIndexedDBProviders()
+
+const fileSystemProvider = new RegisteredFileSystemProvider(false)
+
+// SpecLynx: Sample API spec
+fileSystemProvider.registerFile(
+  new RegisteredMemoryFile(
+    monaco.Uri.file('/workspace/petstore.yaml'),
+    petstoreSample
+  )
+)
+
+// Use a workspace file to be able to add another folder later (for the "Attach filesystem" button)
+fileSystemProvider.registerFile(
+  new RegisteredMemoryFile(
     workspaceFile,
     JSON.stringify(
       <IStoredWorkspace>{
-        folders: []
+        folders: [
+          {
+            path: '/workspace'
+          }
+        ]
       },
       null,
       2
     )
   )
+)
 
-  registerHTMLFileSystemProvider()
-} else {
-  const fileSystemProvider = new RegisteredFileSystemProvider(false)
-
-  // SpecLynx: Sample API spec
-  fileSystemProvider.registerFile(
-    new RegisteredMemoryFile(
-      monaco.Uri.file('/workspace/petstore.yaml'),
-      petstoreSample
-    )
-  )
-
-  // Use a workspace file to be able to add another folder later (for the "Attach filesystem" button)
-  fileSystemProvider.registerFile(
-    new RegisteredMemoryFile(
-      workspaceFile,
-      JSON.stringify(
-        <IStoredWorkspace>{
-          folders: [
-            {
-              path: '/workspace'
-            }
-          ]
-        },
-        null,
-        2
-      )
-    )
-  )
-
-  registerFileSystemOverlay(1, fileSystemProvider)
-}
+registerFileSystemOverlay(1, fileSystemProvider)
 
 // Workers
 const workers: Partial<Record<string, Worker>> = {
@@ -173,9 +176,7 @@ await Promise.all([
 ])
 
 export const constructOptions: IWorkbenchConstructionOptions = {
-  remoteAuthority,
   enableWorkspaceTrust: false,
-  connectionToken,
   windowIndicator: {
     label: 'SpecLynx Editor',
     tooltip: '',
@@ -187,42 +188,29 @@ export const constructOptions: IWorkbenchConstructionOptions = {
       window.open(window.location.href)
       return true
     },
-    workspace:
-      remotePath == null
-        ? {
-            workspaceUri: workspaceFile
-          }
-        : {
-            folderUri: monaco.Uri.from({
-              scheme: 'vscode-remote',
-              path: remotePath,
-              authority: remoteAuthority
-            })
-          }
+    workspace: { workspaceUri: workspaceFile }
   },
   developmentOptions: {
-    logLevel: LogLevel.Info // Default value
+    logLevel: LogLevel.Info
   },
   configurationDefaults: {
-    'window.title': 'SpecLynx Editor${separator}${dirty}${activeEditorShort}'
+    'window.title': 'SpecLynx Editor${separator}${dirty}${activeEditorShort}',
+    'workbench.colorTheme': 'SpecLynx Light',
+    'workbench.iconTheme': 'vs-seti'
   },
   defaultLayout: {
-    editors: useHtmlFileSystemProvider
-      ? undefined
-      : [
-          {
-            uri: monaco.Uri.file('/workspace/petstore.yaml'),
-            viewColumn: 1
-          }
-        ],
-    layout: useHtmlFileSystemProvider
-      ? undefined
-      : {
-          editors: {
-            orientation: 0,
-            groups: [{ size: 1 }]
-          }
-        },
+    editors: [
+      {
+        uri: monaco.Uri.file('/workspace/petstore.yaml'),
+        viewColumn: 1
+      }
+    ],
+    layout: {
+      editors: {
+        orientation: 0,
+        groups: [{ size: 1 }]
+      }
+    },
     views: [],
     force: resetLayout
   },
