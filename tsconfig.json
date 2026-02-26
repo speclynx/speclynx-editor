@@ -1,0 +1,30 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "useDefineForClassFields": true,
+    "module": "ESNext",
+    "lib": ["ESNext", "DOM"],
+    "moduleResolution": "bundler",
+    "strict": true,
+    "sourceMap": true,
+    "resolveJsonModule": true,
+    "isolatedModules": false,
+    "esModuleInterop": true,
+    "noEmit": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noImplicitReturns": true,
+    "baseUrl": ".",
+    "experimentalDecorators": true,
+    "noUncheckedIndexedAccess": true,
+    "paths": {
+      "vscode/vscode/*": ["../dist/main/vscode/src/*"],
+      "vscode/*": ["../dist/main/*"]
+    },
+    "typeRoots": [
+      "./node_modules/@types"
+    ],
+    "skipLibCheck": true
+  },
+  "include": ["src", "vite.config.ts", "vite.netlify.config.ts", "update-local-dependencies.ts"]
+}
