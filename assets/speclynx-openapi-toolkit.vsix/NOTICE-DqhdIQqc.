@@ -1,0 +1,17 @@
+OpenAPI Toolkit
+Copyright 2025 SpecLynx
+OpenAPI Toolkit is licensed under Apache 2.0 license.
+Copy of the Apache 2.0 license can be found in `LICENSE` file.
+
+vscode
+Copyright (c) Microsoft Corporation. All rights reserved.
+File client/src/commandManager.ts (the file) was originally created as commandManager.ts under MIT license in https://github.com/microsoft/vscode/blob/main/extensions/typescript-language-features/src/commands.ts.
+The file has been copied into this project and modified. All modifications are licensed under Apache 2.0 License.
+Copy of the MIT license can be found at https://github.com/microsoft/vscode/blob/main/LICENSE.txt.
+
+vscode-spectral
+Copyright 2018 Stoplight, Inc.
+File server/src/spectral/spectralLinter.ts (the file) was originally created as server/src/linter.ts under Apache 2.0 license in https://github.com/stoplightio/vscode-spectral repository.
+The file has been copied into this project and modified. All modifications are licensed under Apache 2.0 License.
+Copy of the Apache 2.0 license can be found in `LICENSE` file.
+

@@ -1,0 +1,1 @@
+const vscode="function"==typeof acquireVsCodeApi?acquireVsCodeApi():globalThis,ui=globalThis.SwaggerUIBundle({dom_id:"#root",presets:[globalThis.SwaggerUIBundle.presets.apis]});globalThis.addEventListener("message",e=>{const{data:s}=e;if("preview"===s.command)ui.specActions.updateSpec(s.text)}),vscode.postMessage({command:"init"});
