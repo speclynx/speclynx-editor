@@ -1,7 +1,7 @@
 #!/bin/bash
 # patches/apply.sh — Post-install patches for monaco-vscode-api
-# These patches make VSIX-bundled extensions behave as user-installed extensions
-# rather than hidden built-in extensions.
+# These patches make VSIX-bundled extensions visible in the Extensions panel
+# as user-installed extensions rather than hidden built-in extensions.
 
 set -e
 

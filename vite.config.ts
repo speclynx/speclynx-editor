@@ -11,6 +11,7 @@ const localDependencies = Object.entries(pkg.dependencies as Record<string, stri
   .filter(([, version]) => version.startsWith('file:../'))
   .map(([name]) => name)
 export default defineConfig({
+  base: './',
   build: {
     target: 'esnext'
   },

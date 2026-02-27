@@ -79,7 +79,7 @@ export let workspaceFile = monaco.Uri.file('/workspace.code-workspace')
 // Version-based cache clear: bump this when branding/config changes
 // to ensure returning visitors get fresh settings from IndexedDB.
 // Must run BEFORE createIndexedDBProviders so providers open fresh databases.
-const EDITOR_VERSION = '4'
+const EDITOR_VERSION = '6'
 const STORAGE_VERSION_KEY = 'speclynx-editor-version'
 const storedVersion = localStorage.getItem(STORAGE_VERSION_KEY)
 if (storedVersion !== EDITOR_VERSION) {
@@ -199,25 +199,22 @@ export const constructOptions: IWorkbenchConstructionOptions = {
     'workbench.iconTheme': 'vs-seti'
   },
   defaultLayout: {
-    editors: [
-      {
-        uri: monaco.Uri.file('/workspace/petstore.yaml'),
-        viewColumn: 1
-      }
-    ],
     layout: {
       editors: {
         orientation: 0,
         groups: [{ size: 1 }]
       }
     },
-    views: [],
+    views: [
+      { id: 'workbench.panel.markers.view' }
+    ],
     force: resetLayout
   },
   productConfiguration: {
     nameShort: 'SpecLynx Editor',
     nameLong: 'SpecLynx API Spec Editor',
     applicationName: 'speclynx-editor',
+    trustedExtensionPublishers: ['speclynx'],
     extensionsGallery: {
       serviceUrl: 'https://open-vsx.org/vscode/gallery',
       resourceUrlTemplate: 'https://open-vsx.org/vscode/unpkg/{publisher}/{name}/{version}/{path}',

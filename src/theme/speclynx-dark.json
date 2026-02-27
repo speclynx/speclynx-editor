@@ -27,6 +27,8 @@
     "editorSuggestWidget.background": "#102030",
     "editorSuggestWidget.border": "#1d3d5d",
     "editorSuggestWidget.selectedBackground": "#1d4d7a",
+    "editorSuggestWidget.selectedForeground": "#ffffff",
+    "editorSuggestWidget.focusHighlightForeground": "#7ED8F5",
     "editorHoverWidget.background": "#102030",
     "editorHoverWidget.border": "#1d3d5d",
 

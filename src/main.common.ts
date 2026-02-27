@@ -23,10 +23,34 @@ const { getApi } = registerExtension(
       vscode: '*'
     }
   },
-  ExtensionHostKind.LocalProcess
+  ExtensionHostKind.LocalProcess,
+  { system: true }
 )
 
 void getApi().then(async (vscode) => {
   const petstoreUri = vscode.Uri.file('/workspace/petstore.yaml')
-  await vscode.workspace.openTextDocument(petstoreUri)
+
+  // Open extension detail first (first content in editor area — no switch)
+  await vscode.commands.executeCommand('extension.open', 'speclynx.vscode-openapi-toolkit')
+  // Open petstore.yaml on top (forward motion, covers extension detail)
+  const doc = await vscode.workspace.openTextDocument(petstoreUri)
+  await vscode.window.showTextDocument(doc, { preview: false })
+
+  // Wait for the OpenAPI Toolkit preview command to become available
+  const ready = await (async () => {
+    const deadline = Date.now() + 15_000
+    while (Date.now() < deadline) {
+      const cmds = await vscode.commands.getCommands(true)
+      if (cmds.includes('openapiToolkit.preview')) return true
+      await new Promise(r => setTimeout(r, 300))
+    }
+    return false
+  })()
+
+  if (ready) {
+    // Open rendered API preview to the side
+    await vscode.commands.executeCommand('openapiToolkit.preview')
+  }
+  // Ensure petstore.yaml in the left group is focused
+  await vscode.commands.executeCommand('workbench.action.focusFirstEditorGroup')
 })

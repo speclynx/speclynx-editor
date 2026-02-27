@@ -14,15 +14,17 @@ src/
 ├── loader.ts                 # Locale detection → loads language pack if ?locale=xx → boots main.workbench
 ├── main.workbench.ts         # Imports setup.workbench (initializes services) then main.common
 ├── setup.workbench.ts        # Creates DOM container (shadow DOM), calls initializeMonacoService
-│                               with all service overrides. Version-based IndexedDB cache clear.
+│                               with all service overrides.
 ├── setup.common.ts           # The big config file:
 │                               - All service overrides (what VSCode features are active)
 │                               - Virtual filesystem (petstore.yaml sample)
 │                               - Web workers (editor, extension host, textmate, search, etc.)
 │                               - Workbench options (branding, layout, gallery, window title)
+│                               - Version-based IndexedDB cache clear
 │                               - Exports constructOptions & commonServices for setup.workbench
 ├── main.common.ts            # Registers language extensions (JSON, YAML, Markdown), seti icon theme,
-│                               utility extensions, opens petstore.yaml on startup
+│                               utility extensions, orchestrates startup layout (extension detail →
+│                               petstore.yaml → API preview)
 ├── style.css                 # Global styles — workbench layout, product icon sizing
 ├── types.d.ts                # TypeScript ambient declarations
 │
@@ -32,8 +34,9 @@ src/
 │   └── speclynx-dark.json    # Dark theme token colors
 │
 ├── features/                 # Feature modules
-│   ├── galleryFilter.ts      # Intercepts fetch to hide bundled extension from marketplace search
-│   └── notifications.ts      # Notification handling
+│   └── galleryFilter.ts      # Intercepts fetch to hide bundled extension from marketplace search
+│
+├── types.d.ts                # TypeScript ambient declarations (Window.vscodeContainer)
 │
 ├── user/                     # Default user settings (loaded before services init)
 │   ├── configuration.json    # Default editor/workbench settings (theme, font size, startup, etc.)
@@ -43,8 +46,7 @@ src/
 │   └── petstore.yaml         # Petstore OpenAPI spec — the default document
 │
 └── tools/                    # Internal utilities
-    ├── fakeWorker.ts         # Worker wrapper for Vite compatibility
-    └── extHostWorker.ts      # Extension host worker bridge
+    └── fakeWorker.ts         # Worker wrapper for Vite compatibility
 ```
 
 ### Boot Sequence
@@ -52,7 +54,7 @@ src/
 ```
 entry.ts → loader.ts → [language pack?] → main.workbench.ts
                                               ├── setup.workbench.ts  (cache clear → DOM → initializeMonacoService)
-                                              └── main.common.ts      (extensions → open petstore.yaml)
+                                              └── main.common.ts      (extensions → startup layout → open preview)
                                                     └── setup.common.ts  (services, filesystem, workers, config)
 ```
 
@@ -64,24 +66,49 @@ entry.ts → loader.ts → [language pack?] → main.workbench.ts
 
 ## Extension Bundling
 
-The SpecLynx OpenAPI Toolkit extension is bundled via `@codingame/monaco-vscode-rollup-vsix-plugin`:
+The SpecLynx OpenAPI Toolkit extension is bundled as a VSIX file via `@codingame/monaco-vscode-rollup-vsix-plugin`:
 
 ```ts
 import '../extensions/speclynx-openapi-toolkit.vsix'
 ```
 
-The VSIX file lives in `extensions/` and is imported directly in `setup.common.ts`.
+The VSIX file lives in `extensions/` and is imported directly in `setup.common.ts`. This approach was chosen over marketplace loading (`additionalBuiltinExtensions`) because:
+- **Instant activation** (~554ms vs ~2.6s from marketplace)
+- **Works offline** — no dependency on Open VSX availability
+- **Deterministic** — exact extension version is shipped with the editor
+- **Visible under Installed** — shows in the Extensions panel for marketing
 
 ### Patches (`patches/apply.sh`)
 
-Post-install patches make bundled extensions behave as **user-installed** rather than hidden built-ins:
+Post-install patches make the bundled extension visible in the Extensions panel as a user-installed extension:
 
 1. `rollup-vsix-plugin.js`: `system: true` → `system: false` (visible in Extensions panel)
 2. `extensions.js`: `isBuiltin: true` → `isBuiltin: system` (respects the system flag)
 
-Without these, the extension would be invisible in the UI — registered as a system/built-in extension.
+Without these, the extension would be invisible in the UI — registered as a hidden built-in extension.
 
-**Run after `npm install`** via the `postinstall` script.
+**Run after `npm install`** via the `postinstall` script. **Fragile:** patches won't survive `npm update` on the patched packages.
+
+### Glue Extensions
+
+Two internal "glue" extensions are registered in code (not via VSIX):
+
+- **`speclynx-editor-api`** (`setup.workbench.ts`) — calls `.setAsDefaultApi()` to provide VSCode API access. Hidden from panel.
+- **`speclynx-editor-main`** (`main.common.ts`) — opens `petstore.yaml` on startup. Hidden from panel via `{ system: true }`.
+
+These are not real extensions — they're runtime registrations needed to interact with the VSCode API. Only the OpenAPI Toolkit should be visible in the Extensions panel.
+
+### Startup Layout Sequence (`main.common.ts`)
+
+The editor opens three things on startup in forward-only order (no back-and-forth tab switching):
+
+1. **Extension detail tab** — `extension.open` (first content, fills empty editor area)
+2. **petstore.yaml** — `showTextDocument` (opens on top, covers extension detail)
+3. **API preview** — `openapiToolkit.preview` (Scalar renderer, opens to the side)
+
+The preview command is provided by the OpenAPI Toolkit extension, which runs in the worker extension host and takes time to activate. A polling loop waits up to 15 seconds for `openapiToolkit.preview` to become available before executing it.
+
+The `defaultLayout` in `setup.common.ts` does **not** include `petstore.yaml` in its `editors` array — this avoids conflicts between the default layout opening petstore and main.common.ts opening it again. The **Problems panel** is pre-opened via `defaultLayout.views` with `workbench.panel.markers.view`.
 
 ### Gallery Filter (`features/galleryFilter.ts`)
 
@@ -91,6 +118,10 @@ Intercepts `fetch()` calls to the Open-VSX marketplace and filters out `speclynx
 - Consumes `response.json()` directly (not via `.clone()`) and reconstructs the Response with properly copied headers
 - Updates `TotalCount` in result metadata after filtering, otherwise VSCode shows an error when all results are filtered out
 - The old approach of using `response.clone().json()` caused header corruption in the reconstructed Response
+
+### Trusted Publishers
+
+`productConfiguration.trustedExtensionPublishers` includes `'speclynx'` to suppress the "Do you trust the publisher?" dialog when extensions from SpecLynx are installed (either bundled or from marketplace). This is separate from Open VSX's publisher verification.
 
 ## Branding
 
@@ -104,6 +135,10 @@ Intercepts `fetch()` calls to the Open-VSX marketplace and filters out `speclynx
 ## Themes
 
 Only two color themes are available: **SpecLynx Light** (default) and **SpecLynx Dark**.
+
+Registered in `src/theme/index.ts` as a VSCode extension. The `id` field in each theme contribution **must match** the `"workbench.colorTheme"` value in `configuration.json` / `configurationDefaults` exactly — the `id` becomes the `settingsId` used by the theme service for matching (`settingsId = theme.id || label`).
+
+Both themes include explicit `editorSuggestWidget.selectedForeground` and `editorSuggestWidget.focusHighlightForeground` colors. Without these, the suggest widget's selected item foreground falls back to `list.activeSelectionForeground` (white), making text invisible on the light selected background.
 
 All built-in VSCode themes were removed:
 - `@codingame/monaco-vscode-theme-defaults-default-extension` (8 themes: Dark+, Light+, etc.)
@@ -155,7 +190,7 @@ Removed: HTML, CSS, JavaScript, TypeScript (not needed; SpecLynx extension activ
 
 ## IndexedDB Cache Versioning
 
-`setup.workbench.ts` implements version-based cache clearing. When `EDITOR_VERSION` is bumped, all `vscode-*` and `workbench-*` IndexedDB databases are cleared on next visit. This ensures returning users get fresh branding/config after updates.
+`setup.common.ts` implements version-based cache clearing. When `EDITOR_VERSION` is bumped, all `vscode-*` and `workbench-*` IndexedDB databases are cleared on next visit. This ensures returning users get fresh branding/config after updates.
 
 **Bump `EDITOR_VERSION` when:** changing default theme, branding, configuration defaults, or anything stored in IndexedDB.
 
@@ -173,6 +208,14 @@ Cross-Origin-Resource-Policy: cross-origin
 
 Vite dev server sets these via `configureServer` in `vite.config.ts`. Production hosting must set them too.
 
+## Deployment
+
+### GitHub Pages
+
+`vite.config.ts` sets `base: './'` so all asset paths in the build output are relative. This allows deployment to any subpath (e.g., `https://org.github.io/speclynx-editor/`) without path issues.
+
+Deploy the `dist/` directory directly to GitHub Pages. The COEP/COOP headers must be configured at the hosting level (e.g., via Cloudflare Workers, a `_headers` file for Netlify, or a service worker for GitHub Pages).
+
 ## Development
 
 ```bash
@@ -182,7 +225,7 @@ npm run build        # Production build → dist/ (~98MB, ~1m18s)
 npm run preview      # Preview production build
 ```
 
-**Build size note:** 98MB total is expected for a full VSCode workbench. The main JS bundle is ~12MB (3MB gzipped). Most of the size is tree-sitter WASM files, i18n JSON, and the SpecLynx extension assets.
+**Build size note:** ~98MB total is expected for a full VSCode workbench. The main JS bundle is ~12MB (3MB gzipped). Most of the size is tree-sitter WASM files, i18n JSON, and the SpecLynx extension assets.
 
 ### Vite Cache
 
@@ -214,3 +257,17 @@ rm -rf node_modules/.vite
 6. **COEP headers affect cross-origin requests.** The `Cross-Origin-Embedder-Policy: credentialless` header can block requests to services that don't send `Cross-Origin-Resource-Policy`. Open-VSX works because it supports CORS, but other services might not.
 
 7. **Service overrides are modular.** Removing a service override is a one-line deletion. Restoring it is a one-line addition. Don't be afraid to trim aggressively — you can always add things back.
+
+8. **Theme `id` must match config exactly.** In `ColorThemeData.fromExtensionTheme()`, `settingsId = theme.id || label`. The theme contribution `id` field must match the `"workbench.colorTheme"` configuration value exactly (e.g., `'SpecLynx Light'`, not `'speclynx-light'`).
+
+9. **Theme import must come first.** The theme registration (`import './theme'`) must be the first import in `setup.common.ts` — before any service overrides or `localExtensionHost`. This ensures `registerExtension()` is called while `servicesInitialized` is still `false`, placing the theme in `builtinExtensions` for synchronous processing during init.
+
+10. **VSIX bundling beats marketplace loading for core extensions.** `additionalBuiltinExtensions` (marketplace) adds ~2.6s network latency, requires Open VSX availability, and shows extensions under @builtin (not Installed). VSIX bundling activates in ~554ms, works offline, and with patches shows under Installed. Use marketplace loading for optional extensions; bundle core ones.
+
+11. **`extension.open` always steals focus.** The `extension.open` command has no `preserveFocus` option — it always becomes the active editor tab. To avoid visible tab switching, open it as the first content in an empty editor area, then open the desired file on top (forward-only motion).
+
+12. **Extension commands require polling.** VSIX extensions run in the worker extension host and their commands aren't available immediately. Use `vscode.commands.getCommands()` in a polling loop to wait for commands like `openapiToolkit.preview` to become registered.
+
+13. **`editorSuggestWidget` foreground fallback is `list.activeSelectionForeground`.** Without explicit `editorSuggestWidget.selectedForeground`, the suggest widget's selected item text color falls back to `list.activeSelectionForeground` — often white, which is invisible on light backgrounds. Always set it explicitly in themes.
+
+14. **Use `base: './'` for portable builds.** Vite defaults to `base: '/'` which breaks on GitHub Pages (subpath deployment). Setting `base: './'` makes all asset paths relative, working on any hosting path.

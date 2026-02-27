@@ -1,3 +1,7 @@
+interface Window {
+  vscodeContainer?: HTMLElement
+}
+
 declare module '*?url' {
   const url: string
   export default url
