@@ -11,9 +11,13 @@ const localDependencies = Object.entries(pkg.dependencies as Record<string, stri
   .filter(([, version]) => version.startsWith('file:../'))
   .map(([name]) => name)
 export default defineConfig({
+  root: 'public',
+  publicDir: '../static',
   base: './',
   build: {
-    target: 'esnext'
+    target: 'esnext',
+    outDir: '../dist',
+    emptyOutDir: true
   },
   worker: {
     format: 'es'
