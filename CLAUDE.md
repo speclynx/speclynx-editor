@@ -26,7 +26,7 @@ src/
 │                               utility extensions, orchestrates startup layout (extension detail →
 │                               petstore.yaml → API preview)
 ├── style.css                 # Global styles — workbench layout, product icon sizing
-├── types.d.ts                # TypeScript ambient declarations
+├── types.d.ts                # TypeScript ambient declarations (Window.vscodeContainer)
 │
 ├── theme/                    # SpecLynx color themes
 │   ├── index.ts              # Registers themes as a VSCode extension (Light + Dark)
@@ -35,8 +35,6 @@ src/
 │
 ├── features/                 # Feature modules
 │   └── galleryFilter.ts      # Intercepts fetch to hide bundled extension from marketplace search
-│
-├── types.d.ts                # TypeScript ambient declarations (Window.vscodeContainer)
 │
 ├── user/                     # Default user settings (loaded before services init)
 │   ├── configuration.json    # Default editor/workbench settings (theme, font size, startup, etc.)
@@ -130,7 +128,7 @@ Intercepts `fetch()` calls to the Open-VSX marketplace and filters out `speclynx
 - **Status bar:** Shows "SpecLynx Editor" via `windowIndicator.label`
 - **HTML title:** Set in `index.html`
 - **Product icon:** `src/product-icon.png`, injected into shadow DOM via CSS
-- **Favicon:** `public/favicon.ico` + `public/speclynx-logo.svg`
+- **Favicon:** `static/favicon.ico` + `static/speclynx-logo.svg`
 
 ## Themes
 
@@ -208,13 +206,33 @@ Cross-Origin-Resource-Policy: cross-origin
 
 Vite dev server sets these via `configureServer` in `vite.config.ts`. Production hosting must set them too.
 
+## Project Structure
+
+```
+index.html           ← Vite entry point (must be at repo root)
+static/              ← publicDir (copied as-is to dist/ root)
+  CNAME              # Custom domain for GitHub Pages (editor.speclynx.com)
+  favicon.ico        # Favicon
+  speclynx-logo.svg  # SVG icon
+```
+
+Vite is configured with `publicDir: 'static'`. `index.html` must live at the repo root (Vite convention — moving it breaks path resolution for workers, VSIX plugin, and CSS imports). The `static/` directory contains files copied verbatim to `dist/` root without hashing (CNAME, favicons).
+
 ## Deployment
 
 ### GitHub Pages
 
-`vite.config.ts` sets `base: './'` so all asset paths in the build output are relative. This allows deployment to any subpath (e.g., `https://org.github.io/speclynx-editor/`) without path issues.
+Deployed automatically on push to `main` via `.github/workflows/deploy.yml`:
 
-Deploy the `dist/` directory directly to GitHub Pages. The COEP/COOP headers must be configured at the hosting level (e.g., via Cloudflare Workers, a `_headers` file for Netlify, or a service worker for GitHub Pages).
+1. `npm ci` — installs dependencies (runs `postinstall` patches)
+2. `npm run build` — produces `dist/`
+3. `JamesIves/github-pages-deploy-action` pushes `dist/` to the `gh-pages` branch
+
+**Custom domain:** `editor.speclynx.com` — configured via `static/CNAME` (copied to `dist/CNAME` during build). DNS has a CNAME record: `editor` → `speclynx.github.io`.
+
+**Relative asset paths:** `vite.config.ts` sets `base: './'` so all asset paths in the build output are relative. This works on any hosting path.
+
+**COEP/COOP headers:** Required for SharedArrayBuffer. Vite dev server sets them automatically. Production hosting must set them too (e.g., via Cloudflare Workers or a service worker).
 
 ## Development
 

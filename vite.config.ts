@@ -11,13 +11,10 @@ const localDependencies = Object.entries(pkg.dependencies as Record<string, stri
   .filter(([, version]) => version.startsWith('file:../'))
   .map(([name]) => name)
 export default defineConfig({
-  root: 'public',
-  publicDir: '../static',
+  publicDir: 'static',
   base: './',
   build: {
-    target: 'esnext',
-    outDir: '../dist',
-    emptyOutDir: true
+    target: 'esnext'
   },
   worker: {
     format: 'es'
@@ -28,7 +25,8 @@ export default defineConfig({
       name: 'load-vscode-css-as-string',
       enforce: 'pre',
       async resolveId(source, importer, options) {
-        const resolved = (await this.resolve(source, importer, options))!
+        const resolved = await this.resolve(source, importer, options)
+        if (resolved == null) return undefined
         if (
           resolved.id.match(
             /node_modules\/(@codingame\/monaco-vscode|vscode|monaco-editor).*\.css$/
