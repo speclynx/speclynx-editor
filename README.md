@@ -24,7 +24,7 @@ Edit, validate, and preview OpenAPI, AsyncAPI, and JSON Schema specifications di
 
 A live deployment is available at **[editor.speclynx.com](https://editor.speclynx.com)**.
 
-<a href="https://editor.speclynx.com"><img alt="SpecLynx Editor Screenshot" src="https://raw.githubusercontent.com/speclynx/speclynx-editor/main/static/speclynx-editor.png" /></a>
+<a href="https://editor.speclynx.com"><img alt="SpecLynx Editor Screenshot" src="https://editor.speclynx.com/speclynx-editor.png" /></a>
 
 Every change merged to `main` is automatically deployed, so the demo always reflects the latest version.
 
