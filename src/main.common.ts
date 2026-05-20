@@ -1,5 +1,12 @@
 import './style.css'
+import productIconUrl from './product-icon.png'
 import { ExtensionHostKind, registerExtension } from '@codingame/monaco-vscode-api/extensions'
+
+// Set --product-icon from JS so the URL is absolute at runtime. Defining it in CSS
+// produces a relative url() whose base is the source stylesheet, which Chrome does
+// not preserve when the variable is consumed across the workbench's shadow DOM —
+// the icon then 404s as /product-icon-<hash>.png instead of /assets/product-icon-<hash>.png.
+document.documentElement.style.setProperty('--product-icon', `url(${productIconUrl})`)
 
 // Language extensions needed for API specs
 import '@codingame/monaco-vscode-json-default-extension'

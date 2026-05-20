@@ -115,10 +115,12 @@ The `defaultLayout` in `setup.common.ts` does **not** include `petstore.yaml` in
 Intercepts `fetch()` calls to the Open-VSX marketplace and filters out `speclynx.vscode-openapi-toolkit` from search results. This prevents users from seeing/installing a duplicate of the pre-bundled extension.
 
 **Important implementation details:**
+- **Short-circuits `/latest` lookups for internal extensions.** VSCode's `ExtensionsWorkbenchService` asks open-vsx `/vscode/gallery/<…>/<publisher>/<name>/latest` for *every* installed extension on every running-extensions change — including extensions that don't exist on open-vsx (`vscode.json`, `vscode.yaml`, our `speclynx.speclynx-editor-*` glue, the bundled `speclynx.vscode-openapi-toolkit`). The filter intercepts those URLs and returns a synthetic 404 locally, so they never reach open-vsx. Without this, a burst of unknown-extension lookups gets rate-limited (429) and floods the console.
 - **Reads the body from a `response.clone()`** — never consume the original body. In monaco-vscode-api 32.x the gallery service reads responses via `arrayBuffer()`, so if our filter consumes the original `.json()` and then falls back to returning the original on any error path, the next reader throws `Failed to execute 'arrayBuffer' on 'Response': body stream already read`.
 - **Skips early when `!response.ok`** — open-vsx can return 429 (rate-limited) or 405 (method-not-allowed) on `/vscode/gallery/extensionquery`; those bodies are not JSON and must pass through untouched.
 - Copies headers manually via `new Headers()` rather than passing `response.headers` to the `Response` constructor (passing them directly produces corrupt headers in some browsers).
 - Updates `TotalCount` in `resultMetadata` after filtering, otherwise VSCode shows an error when all results are filtered out.
+- When adding a new built-in/glue extension, add its `{publisher}/{name}` pair to `INTERNAL_EXTENSIONS` in `galleryFilter.ts` (or rely on `INTERNAL_PUBLISHERS` if the publisher is `vscode`). Otherwise the new extension will trigger fresh open-vsx 404/429s on every panel refresh.
 
 ### Trusted Publishers
 
@@ -233,6 +235,8 @@ Deployed automatically on push to `main` via `.github/workflows/deploy.yml`:
 
 **Custom domain:** `editor.speclynx.com` — configured via `static/CNAME` (copied to `dist/CNAME` during build). DNS has a CNAME record: `editor` → `speclynx.github.io`.
 
+**`.nojekyll`:** `static/.nojekyll` is an empty marker file. Without it, GitHub Pages runs Jekyll on the site and **silently strips every file whose name starts with `_`** — including Rollup-emitted chunks like `_commonjsHelpers-*.js`. Symptom: the entry HTML loads, then a chunk it imports 404s, and the workbench fails to boot in prod (works fine on `npm run preview`). Keep this file in `static/` so Vite's `publicDir` copies it to `dist/.nojekyll` on every build.
+
 **Relative asset paths:** `vite.config.ts` sets `base: './'` so all asset paths in the build output are relative. This works on any hosting path.
 
 **COEP/COOP headers:** Required for SharedArrayBuffer. Vite dev server sets them automatically. Production hosting must set them too (e.g., via Cloudflare Workers or a service worker).
@@ -304,3 +308,7 @@ When bumping `@codingame/monaco-vscode-*` across a major version (e.g., 26 → 3
 13. **`editorSuggestWidget` foreground fallback is `list.activeSelectionForeground`.** Without explicit `editorSuggestWidget.selectedForeground`, the suggest widget's selected item text color falls back to `list.activeSelectionForeground` — often white, which is invisible on light backgrounds. Always set it explicitly in themes.
 
 14. **Use `base: './'` for portable builds.** Vite defaults to `base: '/'` which breaks on GitHub Pages (subpath deployment). Setting `base: './'` makes all asset paths relative, working on any hosting path.
+
+15. **GitHub Pages eats underscore-prefixed files.** GH Pages runs Jekyll by default and Jekyll treats `_*` as "private" — those files never reach the served site even though they're committed to the `gh-pages` branch. Rollup's CommonJS interop emits chunks like `_commonjsHelpers-*.js`, so the bug manifests as a chunk 404 mid-boot that's invisible on `npm run preview`. Fix is a single empty `static/.nojekyll` (so `publicDir` copies it to `dist/`).
+
+16. **Relative `url()` inside CSS custom properties breaks across shadow DOM.** Per spec, `url()` in a custom property should be resolved against the defining stylesheet, but Chrome resolves it against the **document URL** when the variable is consumed inside a shadow root's inline `<style>`. Symptom: `--product-icon: url(./product-icon-<hash>.png)` defined in `src/style.css` (which Vite bundles to `/assets/main-<hash>.css`) gets consumed inside the workbench shadow DOM and requests `/product-icon-<hash>.png` (no `/assets/` prefix) → 404 on GitHub Pages. Fix: set the variable from JS via a Vite asset import (`import url from './product-icon.png'`), which gives an absolute URL at runtime through `import.meta.url`. See `src/main.common.ts`. Do not put the `--product-icon` definition back in CSS.
