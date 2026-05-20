@@ -50,7 +50,7 @@
     "@codingame/monaco-vscode-outline-service-override": "~26.2.1",
     "@codingame/monaco-vscode-output-service-override": "~26.2.1",
     "@codingame/monaco-vscode-preferences-service-override": "~26.2.1",
-    "@codingame/monaco-vscode-quickaccess-service-override": "~26.2.1",
+    "@codingame/monaco-vscode-quickaccess-service-override": "~32.0.2",
     "@codingame/monaco-vscode-references-view-default-extension": "~26.2.1",
     "@codingame/monaco-vscode-scm-service-override": "~26.2.1",
     "@codingame/monaco-vscode-search-result-default-extension": "~26.2.1",
