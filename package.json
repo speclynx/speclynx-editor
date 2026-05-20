@@ -39,7 +39,7 @@
     "@codingame/monaco-vscode-language-pack-zh-hans": "~26.2.1",
     "@codingame/monaco-vscode-language-pack-zh-hant": "~26.2.1",
     "@codingame/monaco-vscode-languages-service-override": "~26.2.1",
-    "@codingame/monaco-vscode-lifecycle-service-override": "~26.2.1",
+    "@codingame/monaco-vscode-lifecycle-service-override": "~32.0.2",
     "@codingame/monaco-vscode-localization-service-override": "~26.2.1",
     "@codingame/monaco-vscode-log-service-override": "~26.2.1",
     "@codingame/monaco-vscode-markdown-basics-default-extension": "~26.2.1",
