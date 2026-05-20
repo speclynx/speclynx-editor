@@ -11,10 +11,14 @@ window.fetch = async function (...args) {
   const response = await originalFetch.apply(this, args)
   const url = typeof args[0] === 'string' ? args[0] : (args[0] instanceof Request ? args[0].url : args[0]?.href)
   
-  if (url && url.includes('/vscode/gallery') && url.includes('extensionquery')) {
+  if (url && url.includes('/vscode/gallery') && url.includes('extensionquery') && response.ok) {
+    // Work on a clone so the original body remains intact if anything goes wrong.
+    // The gallery service in monaco-vscode-api 32.x reads the body via arrayBuffer(),
+    // so we must never consume the original response's body stream on the fallback path.
+    const cloned = response.clone()
     try {
-      const data = await response.json()
-      
+      const data = await cloned.json()
+
       if (data?.results?.[0]?.extensions) {
         const filtered = data.results[0].extensions.filter(
           (ext: any) => {
@@ -35,26 +39,22 @@ window.fetch = async function (...args) {
             }
           }
         }
-        const headers = new Headers()
-        response.headers.forEach((value: string, key: string) => {
-          headers.set(key, value)
-        })
-        return new Response(JSON.stringify(data), {
-          status: response.status,
-          statusText: response.statusText,
-          headers
-        })
       }
-      // If no extensions array, reconstruct response from parsed JSON
+
+      // Copy headers manually — passing response.headers directly can corrupt them.
+      const headers = new Headers()
+      response.headers.forEach((value: string, key: string) => {
+        headers.set(key, value)
+      })
       return new Response(JSON.stringify(data), {
         status: response.status,
         statusText: response.statusText,
-        headers: response.headers
+        headers
       })
     } catch {
-      // If parsing fails, return original response
+      // Parsing failed — fall through and return the untouched original response.
     }
   }
-  
+
   return response
 }

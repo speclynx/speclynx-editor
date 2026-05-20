@@ -87,6 +87,8 @@ Without these, the extension would be invisible in the UI — registered as a hi
 
 **Run after `npm install`** via the `postinstall` script. **Fragile:** patches won't survive `npm update` on the patched packages.
 
+**Status in monaco-vscode-api 32.x:** both changes have been merged upstream — `rollup-vsix-plugin.js` already emits `system: false`, and `extensions.js` already uses `isBuiltin: system`. The `sed` commands in `patches/apply.sh` therefore match nothing on v32 (the script still prints "Patches applied successfully" because `sed` doesn't error on no-match). The patches are kept as a safety net but can be removed once we're confident we won't downgrade.
+
 ### Glue Extensions
 
 Two internal "glue" extensions are registered in code (not via VSIX):
@@ -113,9 +115,10 @@ The `defaultLayout` in `setup.common.ts` does **not** include `petstore.yaml` in
 Intercepts `fetch()` calls to the Open-VSX marketplace and filters out `speclynx.vscode-openapi-toolkit` from search results. This prevents users from seeing/installing a duplicate of the pre-bundled extension.
 
 **Important implementation details:**
-- Consumes `response.json()` directly (not via `.clone()`) and reconstructs the Response with properly copied headers
-- Updates `TotalCount` in result metadata after filtering, otherwise VSCode shows an error when all results are filtered out
-- The old approach of using `response.clone().json()` caused header corruption in the reconstructed Response
+- **Reads the body from a `response.clone()`** — never consume the original body. In monaco-vscode-api 32.x the gallery service reads responses via `arrayBuffer()`, so if our filter consumes the original `.json()` and then falls back to returning the original on any error path, the next reader throws `Failed to execute 'arrayBuffer' on 'Response': body stream already read`.
+- **Skips early when `!response.ok`** — open-vsx can return 429 (rate-limited) or 405 (method-not-allowed) on `/vscode/gallery/extensionquery`; those bodies are not JSON and must pass through untouched.
+- Copies headers manually via `new Headers()` rather than passing `response.headers` to the `Response` constructor (passing them directly produces corrupt headers in some browsers).
+- Updates `TotalCount` in `resultMetadata` after filtering, otherwise VSCode shows an error when all results are filtered out.
 
 ### Trusted Publishers
 
@@ -253,6 +256,18 @@ After modifying `node_modules` (e.g., re-running patches), clear Vite's transfor
 rm -rf node_modules/.vite
 ```
 
+### Upgrading monaco-vscode-api (major bumps)
+
+When bumping `@codingame/monaco-vscode-*` across a major version (e.g., 26 → 32), follow this checklist — these are the things that broke last time and the order matters:
+
+1. **Bump every `~X.Y.Z` together.** All `@codingame/monaco-vscode-*` packages, plus the aliases `monaco-editor` → `@codingame/monaco-vscode-editor-api` and `vscode` → `@codingame/monaco-vscode-extension-api`, plus the devDep `@codingame/monaco-vscode-rollup-vsix-plugin`. They share a single version line; mixing majors will not work.
+2. **Re-verify the `postinstall` patches still match.** Run `grep -n "system\|isBuiltin" node_modules/@codingame/monaco-vscode-api/extensions.js node_modules/@codingame/monaco-vscode-rollup-vsix-plugin/rollup-vsix-plugin.js`. In v32 both patches are no-ops (already applied upstream); future versions may rewrite these lines and the `sed` patterns will silently miss. If they do, the bundled VSIX will become invisible in the Extensions panel.
+3. **Re-check the gallery filter (`src/features/galleryFilter.ts`).** The gallery service in v32 reads response bodies via `arrayBuffer()`. Our filter must read from `response.clone()` (never the original), short-circuit on `!response.ok`, and never fall through after partially consuming the body. Symptoms of regression: `Failed to execute 'arrayBuffer' on 'Response': body stream already read`, then a cascade where the extension detail tab never opens, petstore.yaml renders empty, and the Scalar preview never appears.
+4. **Bump `EDITOR_VERSION` in `setup.common.ts`.** A workbench major upgrade changes the shape of IndexedDB state; without a bump, returning users (and your own dev sandbox) load stale state from before the upgrade.
+5. **Clear Vite's transform cache** (`rm -rf node_modules/.vite`) and hard-refresh the browser so the version-based IndexedDB clear actually runs.
+6. **Run `npm run build` once** before declaring the upgrade done. Type-only breaks (renamed interfaces, removed re-exports) only surface during the full build.
+7. **Internal glue extensions must register with `{ system: true }`.** `speclynx-editor-main` and `speclynx-editor-api` both need this — without it, monaco-vscode-api will query the gallery for them on every extension-list refresh, triggering 429s from open-vsx and a `speclynx.<name>` line in the Installed panel.
+
 ### URL Parameters
 
 - `?resetLayout` — force layout reset (clears stale state)
@@ -268,7 +283,7 @@ rm -rf node_modules/.vite
 
 3. **IndexedDB persists old config.** Users who visited before a branding change will see stale settings. The version-based cache clear solves this.
 
-4. **Response construction is tricky.** When intercepting `fetch()`, using `response.clone().json()` then passing `response.headers` to a new `Response()` can produce corrupt headers. Consume `.json()` directly and copy headers manually via `new Headers()`.
+4. **Response construction is tricky.** When intercepting `fetch()`, read the body from `response.clone()` so the original stream remains intact for any fall-through path, and copy headers manually via `new Headers()` rather than passing `response.headers` into the `Response` constructor (which corrupts headers in some browsers). Also short-circuit on `!response.ok` — non-2xx bodies (e.g., open-vsx returning 429/405) are not the JSON shape you're filtering and must pass through untouched. In monaco-vscode-api 32.x the gallery service reads bodies via `arrayBuffer()`, so consuming the original body anywhere on the intercept path throws `body stream already read` and cascades into extension activation failures (empty petstore tab, no extension detail tab, etc.).
 
 5. **Shadow DOM blocks headless testing.** Playwright with default headless Chromium can't render the shadow DOM workbench. Use `headless: false` with `args: ['--headless=new']` for screenshots, but even that is unreliable.
 

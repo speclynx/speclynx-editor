@@ -64,5 +64,6 @@ await registerExtension(
       vscode: '*'
     }
   },
-  ExtensionHostKind.LocalProcess
+  ExtensionHostKind.LocalProcess,
+  { system: true }
 ).setAsDefaultApi()

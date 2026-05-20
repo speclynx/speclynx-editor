@@ -79,7 +79,7 @@ export let workspaceFile = monaco.Uri.file('/workspace.code-workspace')
 // Version-based cache clear: bump this when branding/config changes
 // to ensure returning visitors get fresh settings from IndexedDB.
 // Must run BEFORE createIndexedDBProviders so providers open fresh databases.
-const EDITOR_VERSION = '6'
+const EDITOR_VERSION = '7'
 const STORAGE_VERSION_KEY = 'speclynx-editor-version'
 const storedVersion = localStorage.getItem(STORAGE_VERSION_KEY)
 if (storedVersion !== EDITOR_VERSION) {
