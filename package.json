@@ -15,7 +15,7 @@
     "@codingame/monaco-vscode-accessibility-service-override": "~26.2.1",
     "@codingame/monaco-vscode-api": "~26.2.1",
     "@codingame/monaco-vscode-configuration-editing-default-extension": "~26.2.1",
-    "@codingame/monaco-vscode-configuration-service-override": "~26.2.1",
+    "@codingame/monaco-vscode-configuration-service-override": "~32.0.2",
     "@codingame/monaco-vscode-dialogs-service-override": "~26.2.1",
     "@codingame/monaco-vscode-environment-service-override": "~26.2.1",
     "@codingame/monaco-vscode-explorer-service-override": "~26.2.1",
