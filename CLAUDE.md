@@ -128,7 +128,7 @@ The virtual filesystem is seeded with the **Swagger Petstore** in every combinat
 
 The 2.0 and 3.0 fixtures are the canonical Swagger Petstore samples (from `petstore.swagger.io` / `petstore3.swagger.io`); each version's JSON and YAML are two serializations of the same document. The 3.1 fixture is a handcrafted spec; its JSON is derived from `petstore-3.1.yaml`, so **edit the YAML and regenerate the JSON** to keep them in sync. `petstore-3.1.yaml` is the default document opened on startup.
 
-All files are registered in `setup.common.ts` via a `sampleSpecs` array. The toolkit's `apidom` language auto-applies to `openapi.*` / `swagger.*` filenames, but these `petstore-*` files are matched by content/language detection.
+All files are registered in `setup.common.ts` via a `sampleSpecs` array. The toolkit's `apidom` language only auto-applies to `openapi.*` / `swagger.*` filenames, which the `petstore-*` files don't match — so `user/configuration.json` adds `files.associations` entries (`petstore-*.json` / `petstore-*.yaml` → `apidom`) to bind them to the toolkit's language. This also makes them show the OpenAPI Toolkit's file icon in the Explorer before they're opened, rather than the generic unknown-file icon.
 
 ### Gallery Filter (`features/galleryFilter.ts`)
 
