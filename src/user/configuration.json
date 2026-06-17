@@ -18,6 +18,10 @@
         "sound": "on"
     },
     "files.autoSave": "off",
+    "files.associations": {
+        "petstore-*.json": "apidom",
+        "petstore-*.yaml": "apidom"
+    },
     "editor.experimental.asyncTokenization": true,
     "workbench.sideBar.location": "left"
 }

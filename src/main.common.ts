@@ -35,29 +35,47 @@ const { getApi } = registerExtension(
 )
 
 void getApi().then(async (vscode) => {
-  const petstoreUri = vscode.Uri.file('/workspace/petstore.yaml')
+  // The default document opened on startup. The other sample specs (one per supported
+  // OpenAPI version × format) live in the Explorer tree for the user to open on demand —
+  // opening all six on startup is too noisy.
+  const petstoreUri = vscode.Uri.file('/workspace/petstore-3.1.yaml')
 
-  // Open extension detail first (first content in editor area — no switch)
-  await vscode.commands.executeCommand('extension.open', 'speclynx.vscode-openapi-toolkit')
-  // Open petstore.yaml on top (forward motion, covers extension detail)
+  const EXTENSION_ID = 'speclynx.vscode-openapi-toolkit'
+  const waitFor = async (predicate: () => boolean | Promise<boolean>) => {
+    const deadline = Date.now() + 15_000
+    while (Date.now() < deadline) {
+      if (await predicate()) return true
+      await new Promise(r => setTimeout(r, 300))
+    }
+    return false
+  }
+
+  // Open extension detail first (first content in editor area — no switch).
+  // The VSIX activates asynchronously in the worker extension host, so on a cold
+  // start (e.g. after an IndexedDB cache clear) it may not be registered yet —
+  // calling `extension.open` too early throws "Extension not found" and would abort
+  // the whole startup chain. Wait for it to register, and never let it throw: the
+  // sample tab below must open regardless.
+  await waitFor(() => vscode.extensions.getExtension(EXTENSION_ID) != null)
+  try {
+    await vscode.commands.executeCommand('extension.open', EXTENSION_ID)
+  } catch {
+    // Extension detail is non-essential — proceed to open the sample tab.
+  }
+
+  // Open petstore-3.1.yaml on top (forward motion, covers extension detail)
   const doc = await vscode.workspace.openTextDocument(petstoreUri)
   await vscode.window.showTextDocument(doc, { preview: false })
 
   // Wait for the OpenAPI Toolkit preview command to become available
-  const ready = await (async () => {
-    const deadline = Date.now() + 15_000
-    while (Date.now() < deadline) {
-      const cmds = await vscode.commands.getCommands(true)
-      if (cmds.includes('openapiToolkit.preview')) return true
-      await new Promise(r => setTimeout(r, 300))
-    }
-    return false
-  })()
+  const ready = await waitFor(async () =>
+    (await vscode.commands.getCommands(true)).includes('openapiToolkit.preview')
+  )
 
   if (ready) {
     // Open rendered API preview to the side
     await vscode.commands.executeCommand('openapiToolkit.preview')
   }
-  // Ensure petstore.yaml in the left group is focused
+  // Ensure petstore-3.1.yaml in the left group is focused
   await vscode.commands.executeCommand('workbench.action.focusFirstEditorGroup')
 })

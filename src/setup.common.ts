@@ -64,7 +64,12 @@ import 'vscode/localExtensionHost'
 // Import SpecLynx extension via VSIX plugin
 import '../extensions/speclynx-openapi-toolkit.vsix'
 
-import petstoreSample from './samples/petstore.yaml?raw'
+import petstore20JsonSample from './samples/petstore-2.0.json?raw'
+import petstore20YamlSample from './samples/petstore-2.0.yaml?raw'
+import petstore30JsonSample from './samples/petstore-3.0.json?raw'
+import petstore30YamlSample from './samples/petstore-3.0.yaml?raw'
+import petstore31JsonSample from './samples/petstore-3.1.json?raw'
+import petstore31YamlSample from './samples/petstore-3.1.yaml?raw'
 
 const url = new URL(document.location.href)
 const params = url.searchParams
@@ -79,7 +84,7 @@ export let workspaceFile = monaco.Uri.file('/workspace.code-workspace')
 // Version-based cache clear: bump this when branding/config changes
 // to ensure returning visitors get fresh settings from IndexedDB.
 // Must run BEFORE createIndexedDBProviders so providers open fresh databases.
-const EDITOR_VERSION = '7'
+const EDITOR_VERSION = '9'
 const STORAGE_VERSION_KEY = 'speclynx-editor-version'
 const storedVersion = localStorage.getItem(STORAGE_VERSION_KEY)
 if (storedVersion !== EDITOR_VERSION) {
@@ -101,13 +106,21 @@ await createIndexedDBProviders()
 
 const fileSystemProvider = new RegisteredFileSystemProvider(false)
 
-// SpecLynx: Sample API spec
-fileSystemProvider.registerFile(
-  new RegisteredMemoryFile(
-    monaco.Uri.file('/workspace/petstore.yaml'),
-    petstoreSample
+// SpecLynx: Sample API specs — every supported OpenAPI version (2.0, 3.0, 3.1)
+// across both supported formats (JSON + YAML), to demonstrate full coverage.
+const sampleSpecs: Array<[string, string]> = [
+  ['/workspace/petstore-2.0.json', petstore20JsonSample],
+  ['/workspace/petstore-2.0.yaml', petstore20YamlSample],
+  ['/workspace/petstore-3.0.json', petstore30JsonSample],
+  ['/workspace/petstore-3.0.yaml', petstore30YamlSample],
+  ['/workspace/petstore-3.1.json', petstore31JsonSample],
+  ['/workspace/petstore-3.1.yaml', petstore31YamlSample]
+]
+for (const [path, content] of sampleSpecs) {
+  fileSystemProvider.registerFile(
+    new RegisteredMemoryFile(monaco.Uri.file(path), content)
   )
-)
+}
 
 // Use a workspace file to be able to add another folder later (for the "Attach filesystem" button)
 fileSystemProvider.registerFile(
