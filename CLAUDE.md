@@ -17,14 +17,14 @@ src/
 │                               with all service overrides.
 ├── setup.common.ts           # The big config file:
 │                               - All service overrides (what VSCode features are active)
-│                               - Virtual filesystem (petstore.yaml sample)
+│                               - Virtual filesystem (petstore sample specs)
 │                               - Web workers (editor, extension host, textmate, search, etc.)
 │                               - Workbench options (branding, layout, gallery, window title)
 │                               - Version-based IndexedDB cache clear
 │                               - Exports constructOptions & commonServices for setup.workbench
 ├── main.common.ts            # Registers language extensions (JSON, YAML, Markdown), seti icon theme,
 │                               utility extensions, orchestrates startup layout (extension detail →
-│                               petstore.yaml → API preview)
+│                               petstore-3.1.yaml → API preview)
 ├── style.css                 # Global styles — workbench layout, product icon sizing
 ├── types.d.ts                # TypeScript ambient declarations (Window.vscodeContainer)
 │
@@ -40,8 +40,14 @@ src/
 │   ├── configuration.json    # Default editor/workbench settings (theme, font size, startup, etc.)
 │   └── keybindings.json      # Default keybindings
 │
-├── samples/                  # Sample files loaded into the virtual filesystem
-│   └── petstore.yaml         # Petstore OpenAPI spec — the default document
+├── samples/                  # Sample specs loaded into the virtual filesystem — one per
+│   │                           supported OpenAPI version, in both supported formats:
+│   ├── petstore-2.0.json     # Swagger/OpenAPI 2.0 (JSON)
+│   ├── petstore-2.0.yaml     # Swagger/OpenAPI 2.0 (YAML)
+│   ├── petstore-3.0.json     # OpenAPI 3.0.x (JSON)
+│   ├── petstore-3.0.yaml     # OpenAPI 3.0.x (YAML)
+│   ├── petstore-3.1.json     # OpenAPI 3.1.x (JSON)
+│   └── petstore-3.1.yaml     # OpenAPI 3.1.x (YAML) — the default document opened on startup
 │
 └── tools/                    # Internal utilities
     └── fakeWorker.ts         # Worker wrapper for Vite compatibility
@@ -94,7 +100,7 @@ Without these, the extension would be invisible in the UI — registered as a hi
 Two internal "glue" extensions are registered in code (not via VSIX):
 
 - **`speclynx-editor-api`** (`setup.workbench.ts`) — calls `.setAsDefaultApi()` to provide VSCode API access. Hidden from panel.
-- **`speclynx-editor-main`** (`main.common.ts`) — opens `petstore.yaml` on startup. Hidden from panel via `{ system: true }`.
+- **`speclynx-editor-main`** (`main.common.ts`) — opens `petstore-3.1.yaml` on startup. Hidden from panel via `{ system: true }`.
 
 These are not real extensions — they're runtime registrations needed to interact with the VSCode API. Only the OpenAPI Toolkit should be visible in the Extensions panel.
 
@@ -103,12 +109,26 @@ These are not real extensions — they're runtime registrations needed to intera
 The editor opens three things on startup in forward-only order (no back-and-forth tab switching):
 
 1. **Extension detail tab** — `extension.open` (first content, fills empty editor area)
-2. **petstore.yaml** — `showTextDocument` (opens on top, covers extension detail)
-3. **API preview** — `openapiToolkit.preview` (Scalar renderer, opens to the side)
+2. **petstore-3.1.yaml** — `showTextDocument` (opens on top, covers extension detail). Only this default document opens on startup; the other five sample specs stay in the Explorer tree for the user to open on demand.
+3. **API preview** — `openapiToolkit.preview` (Scalar renderer, opens to the side) — renders the active 3.1 YAML
 
 The preview command is provided by the OpenAPI Toolkit extension, which runs in the worker extension host and takes time to activate. A polling loop waits up to 15 seconds for `openapiToolkit.preview` to become available before executing it.
 
-The `defaultLayout` in `setup.common.ts` does **not** include `petstore.yaml` in its `editors` array — this avoids conflicts between the default layout opening petstore and main.common.ts opening it again. The **Problems panel** is pre-opened via `defaultLayout.views` with `workbench.panel.markers.view`.
+The `defaultLayout` in `setup.common.ts` does **not** include `petstore-3.1.yaml` in its `editors` array — this avoids conflicts between the default layout opening it and main.common.ts opening it again. The **Problems panel** is pre-opened via `defaultLayout.views` with `workbench.panel.markers.view`.
+
+### Sample Specs (`src/samples/`)
+
+The virtual filesystem is seeded with the **Swagger Petstore** in every combination of supported OpenAPI version and serialization format — a 3×2 matrix that demonstrates the toolkit's full coverage (the extension supports OpenAPI **2.0**, **3.0**, and **3.1**, in both YAML and JSON):
+
+| Version | JSON | YAML |
+|---------|------|------|
+| 2.0     | `petstore-2.0.json` | `petstore-2.0.yaml` |
+| 3.0     | `petstore-3.0.json` | `petstore-3.0.yaml` |
+| 3.1     | `petstore-3.1.json` | `petstore-3.1.yaml` |
+
+The 2.0 and 3.0 fixtures are the canonical Swagger Petstore samples (from `petstore.swagger.io` / `petstore3.swagger.io`); each version's JSON and YAML are two serializations of the same document. The 3.1 fixture is a handcrafted spec; its JSON is derived from `petstore-3.1.yaml`, so **edit the YAML and regenerate the JSON** to keep them in sync. `petstore-3.1.yaml` is the default document opened on startup.
+
+All files are registered in `setup.common.ts` via a `sampleSpecs` array. The toolkit's `apidom` language only auto-applies to `openapi.*` / `swagger.*` filenames, which the `petstore-*` files don't match — so `user/configuration.json` adds `files.associations` entries (`petstore-*.json` / `petstore-*.yaml` → `apidom`) to bind them to the toolkit's language. This also makes them show the OpenAPI Toolkit's file icon in the Explorer before they're opened, rather than the generic unknown-file icon.
 
 ### Gallery Filter (`features/galleryFilter.ts`)
 
