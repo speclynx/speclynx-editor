@@ -23,7 +23,7 @@
     "@codingame/monaco-vscode-extensions-service-override": "~32.0.2",
     "@codingame/monaco-vscode-files-service-override": "~32.0.2",
     "@codingame/monaco-vscode-json-default-extension": "~32.0.2",
-    "@codingame/monaco-vscode-keybindings-service-override": "~32.0.2",
+    "@codingame/monaco-vscode-keybindings-service-override": "~34.0.2",
     "@codingame/monaco-vscode-language-detection-worker-service-override": "~32.0.2",
     "@codingame/monaco-vscode-language-pack-cs": "~32.0.2",
     "@codingame/monaco-vscode-language-pack-de": "~32.0.2",
