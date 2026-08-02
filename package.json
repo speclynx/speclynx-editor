@@ -35,7 +35,7 @@
     "@codingame/monaco-vscode-language-pack-pl": "~32.0.2",
     "@codingame/monaco-vscode-language-pack-pt-br": "~32.0.2",
     "@codingame/monaco-vscode-language-pack-ru": "~32.0.2",
-    "@codingame/monaco-vscode-language-pack-tr": "~32.0.2",
+    "@codingame/monaco-vscode-language-pack-tr": "~34.0.2",
     "@codingame/monaco-vscode-language-pack-zh-hans": "~32.0.2",
     "@codingame/monaco-vscode-language-pack-zh-hant": "~32.0.2",
     "@codingame/monaco-vscode-languages-service-override": "~32.0.2",
