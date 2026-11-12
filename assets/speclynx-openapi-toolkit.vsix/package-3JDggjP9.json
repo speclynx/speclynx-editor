@@ -2,7 +2,7 @@
   "name": "vscode-openapi-toolkit",
   "displayName": "OpenAPI Toolkit",
   "description": "OpenAPI editing, commands, validation, linting & live preview in VSCode",
-  "version": "1.6.0",
+  "version": "1.7.0",
   "private": true,
   "icon": "./images/icon.png",
   "homepage": "https://speclynx.com",
@@ -83,7 +83,7 @@
     "test": "npm --workspace=server run test && sh ./scripts/e2e.sh",
     "test:web": "vscode-test-web --extensionDevelopmentPath=. --browser=chromium --verbose",
     "typescript:check-types": "tsc -b --verbose --noEmit",
-    "check:publication": "node scripts/check-private-paths.mjs && node scripts/check-retired-identifiers.mjs && node scripts/check-plugin-catalog.mjs",
+    "check:plugin-catalog": "node scripts/check-plugin-catalog.mjs",
     "test:tooling": "node --test scripts/*.test.mjs",
     "test:browser": "vscode-test-web --quality=stable --browser=chromium --headless --extensionDevelopmentPath=. --extensionTestsPath=scripts/browser-smoke.cjs client/testFixture",
     "test:previews": "node scripts/test-preview-assets.mjs"
@@ -115,19 +115,20 @@
     "@babel/plugin-transform-runtime": "^7.29.0",
     "@babel/preset-env": "^7.29.5",
     "@babel/preset-typescript": "^7.28.5",
-    "@electron/rebuild": "^4.0.4",
+    "@electron/rebuild": "^4.2.1",
     "@eslint/js": "^10.0.1",
     "@types/mocha": "^10.0.10",
     "@types/node": "^25.9.1",
     "@types/vscode": "^1.75.0",
-    "@vscode/test-web": "^0.0.80",
+    "@vscode/test-web": "^0.0.81",
     "@vscode/vsce": "^4.0.0",
     "babel-loader": "^10.1.1",
     "copy-webpack-plugin": "^14.0.0",
     "eslint": "^10.4.0",
-    "eslint-plugin-prettier": "^5.5.5",
+    "eslint-plugin-prettier": "^5.5.7",
     "file-loader": "^6.2.0",
     "glob": "^13.0.6",
+    "jsonc-parser": "^3.3.1",
     "marked": "^18.0.4",
     "merge-options": "^3.0.4",
     "mocha": "^12.0.0",
@@ -138,7 +139,7 @@
     "ts-node": "^10.9.2",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.59.4",
-    "webpack-cli": "^7.0.2",
+    "webpack-cli": "^7.3.1",
     "license-webpack-plugin": "^4.0.2",
     "spdx-expression-parse": "^3.0.1"
   },
@@ -152,7 +153,13 @@
   ],
   "capabilities": {
     "untrustedWorkspaces": {
-      "supported": true
+      "supported": "limited",
+      "description": "In Restricted Mode, Spectral linting is off, because a Spectral ruleset can run code, and the workspace cannot choose the rules files.",
+      "restrictedConfigurations": [
+        "speclynx.openapi.validation.applySpectralValidation",
+        "speclynx.openapi.validation.spectralRulesFile",
+        "speclynx.openapi.validation.semanticRulesFile"
+      ]
     },
     "virtualWorkspaces": true
   },

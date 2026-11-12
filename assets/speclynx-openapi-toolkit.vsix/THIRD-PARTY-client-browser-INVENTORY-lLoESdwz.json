@@ -2,212 +2,140 @@
   "target": "client-browser",
   "packages": [
     {
-      "name": "@speclynx/api-languageservice",
-      "version": "2.13.1",
-      "license": "Apache-2.0",
-      "recovered": false
-    },
-    {
       "name": "@speclynx/apidom-core",
-      "version": "5.2.4",
+      "version": "7.0.2",
       "license": "Apache-2.0",
       "recovered": false
     },
     {
       "name": "@speclynx/apidom-datamodel",
-      "version": "5.2.4",
+      "version": "7.0.2",
       "license": "Apache-2.0",
       "recovered": false
     },
     {
       "name": "@speclynx/apidom-error",
-      "version": "5.2.4",
+      "version": "7.0.2",
       "license": "Apache-2.0",
       "recovered": false
     },
     {
       "name": "@speclynx/apidom-json-pointer",
-      "version": "5.2.4",
-      "license": "Apache-2.0",
-      "recovered": false
-    },
-    {
-      "name": "@speclynx/apidom-ns-arazzo-1",
-      "version": "5.2.4",
-      "license": "Apache-2.0",
-      "recovered": false
-    },
-    {
-      "name": "@speclynx/apidom-ns-asyncapi-2",
-      "version": "5.2.4",
+      "version": "7.0.2",
       "license": "Apache-2.0",
       "recovered": false
     },
     {
       "name": "@speclynx/apidom-ns-json-schema-2019-09",
-      "version": "5.2.4",
+      "version": "7.0.2",
       "license": "Apache-2.0",
       "recovered": false
     },
     {
       "name": "@speclynx/apidom-ns-json-schema-2020-12",
-      "version": "5.2.4",
+      "version": "7.0.2",
       "license": "Apache-2.0",
       "recovered": false
     },
     {
       "name": "@speclynx/apidom-ns-json-schema-draft-4",
-      "version": "5.2.4",
+      "version": "7.0.2",
       "license": "Apache-2.0",
       "recovered": false
     },
     {
       "name": "@speclynx/apidom-ns-json-schema-draft-6",
-      "version": "5.2.4",
+      "version": "7.0.2",
       "license": "Apache-2.0",
       "recovered": false
     },
     {
       "name": "@speclynx/apidom-ns-json-schema-draft-7",
-      "version": "5.2.4",
+      "version": "7.0.2",
       "license": "Apache-2.0",
       "recovered": false
     },
     {
       "name": "@speclynx/apidom-ns-openapi-2",
-      "version": "5.2.4",
+      "version": "7.0.2",
       "license": "Apache-2.0",
       "recovered": false
     },
     {
       "name": "@speclynx/apidom-ns-openapi-3-0",
-      "version": "5.2.4",
+      "version": "7.0.2",
       "license": "Apache-2.0",
       "recovered": false
     },
     {
       "name": "@speclynx/apidom-ns-openapi-3-1",
-      "version": "5.2.4",
-      "license": "Apache-2.0",
-      "recovered": false
-    },
-    {
-      "name": "@speclynx/apidom-ns-overlay-1",
-      "version": "5.2.4",
+      "version": "7.0.2",
       "license": "Apache-2.0",
       "recovered": false
     },
     {
       "name": "@speclynx/apidom-parser",
-      "version": "5.2.4",
-      "license": "Apache-2.0",
-      "recovered": false
-    },
-    {
-      "name": "@speclynx/apidom-parser-adapter-arazzo-json-1",
-      "version": "5.2.4",
-      "license": "Apache-2.0",
-      "recovered": false
-    },
-    {
-      "name": "@speclynx/apidom-parser-adapter-arazzo-yaml-1",
-      "version": "5.2.4",
-      "license": "Apache-2.0",
-      "recovered": false
-    },
-    {
-      "name": "@speclynx/apidom-parser-adapter-asyncapi-json-2",
-      "version": "5.2.4",
-      "license": "Apache-2.0",
-      "recovered": false
-    },
-    {
-      "name": "@speclynx/apidom-parser-adapter-asyncapi-yaml-2",
-      "version": "5.2.4",
+      "version": "7.0.2",
       "license": "Apache-2.0",
       "recovered": false
     },
     {
       "name": "@speclynx/apidom-parser-adapter-json",
-      "version": "5.2.4",
+      "version": "7.0.2",
       "license": "Apache-2.0",
       "recovered": false
     },
     {
       "name": "@speclynx/apidom-parser-adapter-openapi-json-2",
-      "version": "5.2.4",
+      "version": "7.0.2",
       "license": "Apache-2.0",
       "recovered": false
     },
     {
       "name": "@speclynx/apidom-parser-adapter-openapi-json-3-0",
-      "version": "5.2.4",
+      "version": "7.0.2",
       "license": "Apache-2.0",
       "recovered": false
     },
     {
       "name": "@speclynx/apidom-parser-adapter-openapi-json-3-1",
-      "version": "5.2.4",
+      "version": "7.0.2",
       "license": "Apache-2.0",
       "recovered": false
     },
     {
       "name": "@speclynx/apidom-parser-adapter-openapi-yaml-2",
-      "version": "5.2.4",
+      "version": "7.0.2",
       "license": "Apache-2.0",
       "recovered": false
     },
     {
       "name": "@speclynx/apidom-parser-adapter-openapi-yaml-3-0",
-      "version": "5.2.4",
+      "version": "7.0.2",
       "license": "Apache-2.0",
       "recovered": false
     },
     {
       "name": "@speclynx/apidom-parser-adapter-openapi-yaml-3-1",
-      "version": "5.2.4",
-      "license": "Apache-2.0",
-      "recovered": false
-    },
-    {
-      "name": "@speclynx/apidom-parser-adapter-overlay-json-1",
-      "version": "5.2.4",
-      "license": "Apache-2.0",
-      "recovered": false
-    },
-    {
-      "name": "@speclynx/apidom-parser-adapter-overlay-yaml-1",
-      "version": "5.2.4",
+      "version": "7.0.2",
       "license": "Apache-2.0",
       "recovered": false
     },
     {
       "name": "@speclynx/apidom-parser-adapter-yaml-1-2",
-      "version": "5.2.4",
+      "version": "7.0.2",
       "license": "Apache-2.0",
       "recovered": false
     },
     {
       "name": "@speclynx/apidom-reference",
-      "version": "5.2.4",
+      "version": "7.0.2",
       "license": "Apache-2.0",
       "recovered": false
     },
     {
       "name": "@speclynx/apidom-traverse",
-      "version": "5.2.4",
-      "license": "Apache-2.0",
-      "recovered": false
-    },
-    {
-      "name": "@stoplight/better-ajv-errors",
-      "version": "1.0.3",
-      "license": "Apache-2.0",
-      "recovered": false
-    },
-    {
-      "name": "@swaggerexpert/arazzo-runtime-expression",
-      "version": "3.2.0",
+      "version": "7.0.2",
       "license": "Apache-2.0",
       "recovered": false
     },
@@ -224,32 +152,20 @@
       "recovered": false
     },
     {
-      "name": "ajv",
-      "version": "8.18.0",
-      "license": "MIT",
-      "recovered": false
-    },
-    {
-      "name": "ajv-errors",
-      "version": "3.0.0",
-      "license": "MIT",
-      "recovered": false
-    },
-    {
-      "name": "ajv-formats",
-      "version": "3.0.1",
-      "license": "MIT",
+      "name": "@swaggerexpert/media-types",
+      "version": "1.0.3",
+      "license": "Apache-2.0",
       "recovered": false
     },
     {
       "name": "apg-lite",
-      "version": "1.0.5",
+      "version": "1.0.7",
       "license": "BSD-2-Clause",
       "recovered": false
     },
     {
       "name": "axios",
-      "version": "1.20.0",
+      "version": "1.21.1",
       "license": "MIT",
       "recovered": false
     },
@@ -266,42 +182,6 @@
       "recovered": false
     },
     {
-      "name": "fast-deep-equal",
-      "version": "3.1.3",
-      "license": "MIT",
-      "recovered": false
-    },
-    {
-      "name": "fast-uri",
-      "version": "3.1.8",
-      "license": "BSD-3-Clause",
-      "recovered": false
-    },
-    {
-      "name": "json-schema-traverse",
-      "version": "1.0.0",
-      "license": "MIT",
-      "recovered": false
-    },
-    {
-      "name": "json-source-map",
-      "version": "0.6.1",
-      "license": "MIT",
-      "recovered": false
-    },
-    {
-      "name": "jsonpointer",
-      "version": "5.0.1",
-      "license": "MIT",
-      "recovered": false
-    },
-    {
-      "name": "leven",
-      "version": "3.1.0",
-      "license": "MIT",
-      "recovered": false
-    },
-    {
       "name": "lodash.debounce",
       "version": "4.0.8",
       "license": "MIT",
@@ -311,18 +191,6 @@
       "name": "minimatch",
       "version": "5.1.9",
       "license": "ISC",
-      "recovered": false
-    },
-    {
-      "name": "openapi-path-templating",
-      "version": "2.2.1",
-      "license": "Apache-2.0",
-      "recovered": false
-    },
-    {
-      "name": "process",
-      "version": "0.11.10",
-      "license": "MIT",
       "recovered": false
     },
     {
@@ -350,12 +218,6 @@
       "recovered": false
     },
     {
-      "name": "unraw",
-      "version": "3.0.0",
-      "license": "MIT",
-      "recovered": false
-    },
-    {
       "name": "vscode-jsonrpc",
       "version": "8.2.0",
       "license": "MIT",
@@ -374,12 +236,6 @@
       "recovered": false
     },
     {
-      "name": "vscode-languageserver-textdocument",
-      "version": "1.0.14",
-      "license": "MIT",
-      "recovered": false
-    },
-    {
       "name": "vscode-languageserver-types",
       "version": "3.17.5",
       "license": "MIT",
@@ -393,13 +249,13 @@
     },
     {
       "name": "web-tree-sitter",
-      "version": "0.26.13",
+      "version": "0.27.2",
       "license": "MIT",
       "recovered": false
     },
     {
       "name": "yaml",
-      "version": "2.9.0",
+      "version": "2.9.1",
       "license": "ISC",
       "recovered": false
     }
